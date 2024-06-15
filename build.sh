@@ -1,1 +1,1 @@
-gcc main.c -o main -Wall -Wextra
+g++ main.cpp -o main.exe -Wall -Wextra
