@@ -1,4 +1,5 @@
-#include "lexer.h"
+#include "parser.h"
+
 
 std::string GetCodeFromFile(std::ifstream& file){
 
@@ -29,7 +30,10 @@ int main(int argc, char* argv[]){
 
     Lexer lexy;
 
-    lexy.StartLexing(code);
+    // lexy.StartLexing(code);
+    std::vector<Token> Token_array = lexy.lexer_start(code);
+    
+    parser(Token_array);
 
     return 0;
 }

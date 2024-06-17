@@ -123,20 +123,12 @@ std::vector<Token> Lexer::lexer_start(std::string code){
     token.type = END_OF_TOKEN;
     Token_array.push_back(token);
 
-    return Token_array;
-}
-
-
-void Lexer::StartLexing(std::string code)
-{
-
-    std::vector<Token> TokenArray;
-
-    TokenArray = lexer_start(code);
-
-    for (auto& tkn : TokenArray)
+    for (auto& tkn : Token_array)
     {
         print_Token(tkn);
     }
 
+    return Token_array;
 }
+
+

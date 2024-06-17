@@ -30,12 +30,10 @@ class Lexer {
     Token generate_number(std::string code, int &current_index);
     Token generate_Keyword(std::string code, int &current_index);
     Token generate_Seperator(std::string code, int &current_index);
-    std::vector<Token> lexer_start(std::string code);
 
 public:
     
-    void StartLexing(std::string code);
-        
+    std::vector<Token> lexer_start(std::string code);
 
 };
 
