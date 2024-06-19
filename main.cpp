@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
     // lexy.StartLexing(code);
     std::vector<Token> Token_array = lexy.lexer_start(code);
     
-    parser(Token_array);
+    // parser(Token_array);
 
     return 0;
 }
