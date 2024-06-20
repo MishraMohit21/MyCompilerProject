@@ -7,11 +7,11 @@ void Lexer::print_Token(Token token){
     std::cout << "TOKEN VALUE: '" << token.value << "', ";
     switch (token.type){
 
-        case INT:
-          std::cout << "TOKEN TYPE : INT\n";  
+        case NUMBER:
+          std::cout << "TOKEN TYPE : NUMBER\n";  
           break;
-        case KEYWORD:
-          std::cout << "TOKEN TYPE : KEYWORD\n";  
+        case PRINT:
+          std::cout << "TOKEN TYPE : PRINT\n";  
           break;
         case SEPERATOR:
           std::cout << "TOKEN TYPE : SEPERATOR\n";  
@@ -25,6 +25,11 @@ void Lexer::print_Token(Token token){
         case STRING:
             std::cout << "TOKEN TYPE : STRING\n";
             break;
+        case EXIT: 
+            std::cout << "TOKEN TYPE : EXIT\n";
+            break;
+        case FUNCTION:
+            std::cout << "TOKEN TYPE : FUNCTION\n"
         case END_OF_TOKEN:
           std::cout << "END_OF_TOKEN\n";  
           break;
@@ -39,7 +44,7 @@ void Lexer::print_Token(Token token){
 Token Lexer::generate_number(std::string code, int &current_index){
 
     Token token;
-    token.type = INT;
+    token.type = NUMBER;
     std::string value;
     while (isdigit(code[current_index]) && code[current_index] != '\0')
     {
@@ -83,15 +88,17 @@ Token Lexer::generate_Keyword(std::string code, int &current_index){
     }
 
     if (value == "exit"){
-        token.type = KEYWORD;
+        token.type = EXIT;
         token.value = "EXIT";
-    }else if (value == "while"){
-        token.type = KEYWORD;
-        token.value = "WHILE";
-    }else if (value == "for"){
-        token.type = KEYWORD;
-        token.value = "FOR";
-    }else{
+    }else if (value == "println")
+    {
+        token.type = PRINT;
+        token.value = value;
+    }else if (value == "func"){
+        token.type = FUNCTION;
+        token.value = value;
+    }
+    else{
         token = generate_Variable(code, start);
     }
 
@@ -129,7 +136,6 @@ Token Lexer::generate_Variable(std::string code, int &current_index){
     token.type = NOT_TOKEN;
     
     if (isIdStart(code[current_index])) {
-        std::cout << "HO sakta hai\n";
         size_t start = current_index;
         while (current_index < code.length() && isId(code[current_index])) {
             ++current_index;

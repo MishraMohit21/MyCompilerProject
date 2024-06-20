@@ -1,2 +1,15 @@
-exit(1);
-str = "Mohit Mishra"
+println("Hello World!");
+
+println(2 + 3 * 4);
+
+
+
+print-range = func(a, b)            
+                if a <= b then { 
+                  print(a);
+                  if a + 1 <= b {
+                    print(", ");
+                    print-range(a + 1, b);
+                  } else println("");        # newline
+                };
+print-range(1, 5);

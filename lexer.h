@@ -9,16 +9,18 @@
 #include <string.h>
 #include <ctype.h>
 #include <vector>
-#include <sstream>
+#include <sstream> 
 
 typedef enum {
-
-    INT, 
+    
+    EXIT,
+    NUMBER, 
     OPERATOR,
-    KEYWORD,
+    PRINT,
     SEPERATOR,
     VARIABLE,
     STRING,
+    FUNCTION,
     NOT_TOKEN,
     END_OF_TOKEN,
 

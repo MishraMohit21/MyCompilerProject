@@ -26,14 +26,15 @@ int main(int argc, char* argv[]){
 
     std::string code = GetCodeFromFile(file);
 
-    std::cout << code;
+    std::cout << code << std::endl;
 
     Lexer lexy;
 
     // lexy.StartLexing(code);
     std::vector<Token> Token_array = lexy.lexer_start(code);
     
-    // parser(Token_array);
+    
+
 
     return 0;
 }
