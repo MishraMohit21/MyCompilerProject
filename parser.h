@@ -1,25 +1,34 @@
+#pragma once
+
+#include "AST.h"
 #include "lexer.h"
-#include "ast.h"
 
 class Parser {
-
-    std::vector <Token> tokens;
-    int current_index;
-
-    Token getNextToken();
-    Token peekNextToken() const;
-    void reportError (const std::string& errorMessage);
-
 public:
+    Parser(const std::vector<Token>& tokens);
+    ASTNode* parse();
+    void printAST(ASTNode* node, int indent = 0);
 
-    Parser(const std::vector<Token> & tokens) : tokens(tokens), current_index(0) {}
+private:
+    std::vector<Token> tokens;
+    size_t currentTokenIndex;
 
-    ProgramNode* parseProgram();
-    ASTNode* pareseStatement();
+    ASTNode* parseProgram();
+    ASTNode* parseStatement();
+    ASTNode* parseExpression();
     ASTNode* parseAssign();
     ASTNode* parseCall();
-    ASTNode* parseExpression();
-    ASTNode* parseTerm();
-    ASTNode* parseFactor();
-    
+    ASTNode* parseFunction();
+    ASTNode* parseBinary();
+    ASTNode* parseVar();
+    ASTNode* parseNum();
+    ASTNode* parseBool();
+    ASTNode* parseString();
+    ASTNode* parseIf();
+
+    Token getNextToken();
+    // Token peekNextToken();
+    void expect(TokenType expectedType);
+    void expect(TokenType expectedType, const std::string& expectedValue);
+    Token peekNextToken(int offset = 1);
 };

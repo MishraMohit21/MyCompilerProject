@@ -7,11 +7,8 @@ void Lexer::print_Token(Token token){
     std::cout << "TOKEN VALUE: '" << token.value << "', ";
     switch (token.type){
 
-        case NUMBER:
-          std::cout << "TOKEN TYPE : NUMBER\n";  
-          break;
-        case PRINT:
-          std::cout << "TOKEN TYPE : PRINT\n";  
+        case DATATYPE:
+          std::cout << "TOKEN TYPE : DATATYPE\n";  
           break;
         case SEPERATOR:
           std::cout << "TOKEN TYPE : SEPERATOR\n";  
@@ -22,14 +19,9 @@ void Lexer::print_Token(Token token){
         case OPERATOR:
             std::cout << "TOKEN TYPE : OPERATOR\n";
             break;
-        case STRING:
-            std::cout << "TOKEN TYPE : STRING\n";
+        case Keyword:
+            std::cout << "TOKEN TYPE : KEYWORD\n";
             break;
-        case EXIT: 
-            std::cout << "TOKEN TYPE : EXIT\n";
-            break;
-        case FUNCTION:
-            std::cout << "TOKEN TYPE : FUNCTION\n"
         case END_OF_TOKEN:
           std::cout << "END_OF_TOKEN\n";  
           break;
@@ -44,7 +36,7 @@ void Lexer::print_Token(Token token){
 Token Lexer::generate_number(std::string code, int &current_index){
 
     Token token;
-    token.type = NUMBER;
+    token.type = DATATYPE;
     std::string value;
     while (isdigit(code[current_index]) && code[current_index] != '\0')
     {
@@ -88,14 +80,14 @@ Token Lexer::generate_Keyword(std::string code, int &current_index){
     }
 
     if (value == "exit"){
-        token.type = EXIT;
+        token.type = Keyword;
         token.value = "EXIT";
     }else if (value == "println")
     {
-        token.type = PRINT;
+        token.type = Keyword;
         token.value = value;
     }else if (value == "func"){
-        token.type = FUNCTION;
+        token.type = Keyword;
         token.value = value;
     }
     else{
@@ -151,7 +143,7 @@ Token Lexer::generate_Variable(std::string code, int &current_index){
 Token Lexer::generate_String(std::string code, int &current_index){
 
     Token token; 
-    token.type = STRING;
+    token.type = DATATYPE;
     std::string value;
     while (code[current_index] != '"' && code[current_index - 1] != (char)92){
 

@@ -11,20 +11,38 @@
 #include <vector>
 #include <sstream> 
 
+typedef enum{
+
+    EXIT, PRINT, FUNCTION, IF, THEN, ELSE,
+
+}Keyword_type;
+
+typedef enum{
+
+    NUMBER, 
+    STRING,
+    BOOLL,
+
+}Datatype;
+
+typedef enum {
+
+    LPAERN, RPAREN, SEMICOL, COMM,
+
+}Seperator_type;
+
 typedef enum {
     
-    EXIT,
-    NUMBER, 
     OPERATOR,
-    PRINT,
+    DATATYPE,
     SEPERATOR,
+    Keyword,
     VARIABLE,
-    STRING,
-    FUNCTION,
     NOT_TOKEN,
     END_OF_TOKEN,
 
 } TokenType;
+
 
 typedef struct {
 

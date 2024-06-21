@@ -6,7 +6,7 @@
 
 
 enum NodeType {
-    PROGRAM, ASSIGN, CALL, LAMDA, BINARY, VAR, NUM
+    PROGRAM, ASSIGN, CALL, FUNC, BINARY, VAR, NUM,  STR, Bool, If,
 };
 
 struct ASTNode
@@ -22,7 +22,7 @@ struct ProgramNode : public ASTNode{
 
 
 struct AssignNode : public ASTNode{
-    std::string operator_t;
+    std::string operator_t = " = ";
     ASTNode* left;
     ASTNode* right;
     AssignNode() {type = ASSIGN;}
@@ -34,10 +34,10 @@ struct CallNode : public ASTNode{
     CallNode() {type = CALL;}
 };
 
-struct LamdaNode : public ASTNode{
+struct FunctionNode : public ASTNode{
     std::vector<std::string> vars;
     ASTNode* body;
-    LamdaNode() {type = LAMDA;}
+    FunctionNode() {type = FUNC;}
 };
 
 struct BinaryNode : public ASTNode{
@@ -58,3 +58,23 @@ struct NumNode : public ASTNode{
     int value;
     NumNode(int val) : value(val) {type = NUM;}
 };
+
+struct BoolNode : public ASTNode
+{   
+    bool value;
+    BoolNode(bool val) : value (val) {type = Bool;}
+};
+
+struct StringNode : public ASTNode
+{
+    std::string value;
+    StringNode(std::string val) : value (val) {type = STR;}
+};
+
+struct IfNode : public ASTNode
+{
+    ASTNode condition , then, Else;
+    IfNode(ASTNode cond, ASTNode th, ASTNode El) : condition(cond), then (th), Else (El) {type = If;}
+};
+
+
