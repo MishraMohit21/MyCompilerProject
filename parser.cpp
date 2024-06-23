@@ -3,22 +3,18 @@
 #include <stdexcept>
 #include <vector>
 
-
 Parser::Parser(const std::vector<Token>& tokens) : tokens(tokens), currentTokenIndex(0) {
     std::cout << "Initializing Parser with tokens\n";
 }
-
 
 ASTNode* Parser::parse() {
     std::cout << "Starting parse\n";
     return parseProgram();
 }
 
-
 void Parser::printAST(ASTNode* node, int indent) {
     if (!node) return;
     for (int i = 0; i < indent; ++i) std::cout << "  ";
-
     switch (node->type) {
         case PROGRAM: {
             std::cout << "Program\n";
@@ -96,20 +92,83 @@ void Parser::printAST(ASTNode* node, int indent) {
     }
 }
 
+void typePrinter(ASTNode* node){
+    switch (node->type) {
+        case PROGRAM: {
+            std::cout << "Program\n";
+            break;
+        }
+        case ASSIGN: {
+            std::cout << "Assign\n";
+            break;
+        }
+        case CALL: {
+            std::cout << "Call\n";
+            break;
+        }
+        case FUNC: {
+            std::cout << "Function\n";
+            break;
+        }
+        case BINARY: {
+            std::cout << "Binary\n";
+            break;
+        }
+        case VAR: {
+            std::cout << "VAR\n";
+            break;
+        }
+        case NUM: {
+            std::cout << "NUM\n";
+            break;
+        }
+        case Bool: {
+            std::cout << "Bool\n";
+            break;
+        }
+        case STR: {
+            std::cout << "STR\n";
+            break;
+        }
+        case If: {
+            std::cout << "IF\n";
+            break;
+        }
+        default:
+            std::cout << "Unknown node type\n";
+            break;
+    }
+}
 
 ASTNode* Parser::parseProgram() {
     std::cout << "Parsing program\n";
     ProgramNode* program = new ProgramNode();
-    while (currentTokenIndex < tokens.size() && tokens[currentTokenIndex].type != END_OF_TOKEN) {
-        program->prog.push_back(parseStatement());
+    while (tokens[currentTokenIndex].type != END_OF_TOKEN) {
+        std::cout << "Current token index: " << currentTokenIndex << std::endl;
+        ASTNode* returnNode = parseStatement();
+        if (returnNode) {
+            typePrinter(returnNode);
+            program->prog.push_back(returnNode);
+        }
+        else {
+            // Error or no valid statement, break to avoid infinite loop
+            std::cout << "Error or no valid statement at index: " << currentTokenIndex << std::endl;
+            break;
+        }
     }
     return program;
 }
 
+bool is_number(const std::string& s) {
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
 
 ASTNode* Parser::parseStatement() {
     std::cout << "Parsing statement\n";
     Token token = peekNextToken();
+    std::cout << "Current token: type = " << token.type << ", value = " << token.value << "\n";
     if (token.type == Keyword) {
         if (token.value == "if") {
             return parseIf();
@@ -118,20 +177,29 @@ ASTNode* Parser::parseStatement() {
         }
     } else if (token.type == VARIABLE) {
         Token nextToken = peekNextToken(1);
+        std::cout << "Next token: type = " << nextToken.type << ", value = " << nextToken.value << "\n";
         if (nextToken.type == OPERATOR && nextToken.value == "=") {
             return parseAssign();
         } else {
             return parseExpression();
         }
     }
+    //getNextToken(); // Consume the token to prevent infinite loop
     return nullptr;
 }
-
 
 ASTNode* Parser::parseExpression() {
     std::cout << "Parsing expression\n";
     Token token = peekNextToken();
-    if (token.type == OPERATOR) {
+    std::cout << "Current token: type = " << token.type << ", value = " << token.value << "\n";
+
+    if (token.type == SEPERATOR && token.value == "(") {
+        getNextToken(); // Consume '('
+        ASTNode* expr = parseExpression();
+        expect(SEPERATOR, ")");
+        return expr;
+    }
+    else if (token.type == OPERATOR) {
         return parseBinary();
     } else if (token.type == DATATYPE) {
         if (std::isdigit(token.value[0])) {
@@ -144,9 +212,9 @@ ASTNode* Parser::parseExpression() {
     } else if (token.type == VARIABLE) {
         return parseVar();
     }
+    getNextToken(); // Consume the token to prevent infinite loop
     return nullptr;
 }
-
 
 ASTNode* Parser::parseAssign() {
     std::cout << "Parsing assignment\n";
@@ -158,7 +226,6 @@ ASTNode* Parser::parseAssign() {
     assign->right = right;
     return assign;
 }
-
 
 ASTNode* Parser::parseCall() {
     std::cout << "Parsing function call\n";
@@ -176,7 +243,6 @@ ASTNode* Parser::parseCall() {
     return call;
 }
 
-
 ASTNode* Parser::parseFunction() {
     std::cout << "Parsing function\n";
     expect(Keyword, "func");
@@ -189,103 +255,79 @@ ASTNode* Parser::parseFunction() {
         }
     }
     expect(SEPERATOR, ")");
-    expect(SEPERATOR, "(");
     func->body = parseStatement();
-    expect(SEPERATOR, ")");
     return func;
 }
 
-
 ASTNode* Parser::parseBinary() {
     std::cout << "Parsing binary expression\n";
-    ASTNode* left = parseExpression();
-    std::string op = getNextToken().value;
-    ASTNode* right = parseExpression();
+    Token leftToken = getNextToken();
+    ASTNode* left = new VarNode(leftToken.value);
+    Token opToken = getNextToken();
+    Token rightToken = getNextToken();
+    ASTNode* right = new VarNode(rightToken.value);
     BinaryNode* binary = new BinaryNode();
     binary->left = left;
+    binary->operator_t = opToken.value;
     binary->right = right;
-    binary->operator_t = op;
     return binary;
 }
 
-
 ASTNode* Parser::parseVar() {
     std::cout << "Parsing variable\n";
-    std::string value = getNextToken().value;
-    return new VarNode(value);
+    Token token = getNextToken();
+    return new VarNode(token.value);
 }
-
 
 ASTNode* Parser::parseNum() {
     std::cout << "Parsing number\n";
-    int value = std::stoi(getNextToken().value);
-    return new NumNode(value);
+    Token token = getNextToken();
+    return new NumNode(std::stoi(token.value));
 }
-
 
 ASTNode* Parser::parseBool() {
     std::cout << "Parsing boolean\n";
-    std::string value = getNextToken().value;
-    return new BoolNode(value == "true");
+    Token token = getNextToken();
+    return new BoolNode(token.value == "true");
 }
-
 
 ASTNode* Parser::parseString() {
     std::cout << "Parsing string\n";
-    std::string value = getNextToken().value;
-    return new StringNode(value);
+    Token token = getNextToken();
+    return new StringNode(token.value.substr(1, token.value.size() - 2)); // Remove quotes
 }
-
 
 ASTNode* Parser::parseIf() {
     std::cout << "Parsing if statement\n";
     expect(Keyword, "if");
-    ASTNode* condition = parseExpression();
-    expect(SEPERATOR, "(");
-    ASTNode* thenStmt = parseStatement();
-    expect(SEPERATOR, ")");
-    ASTNode* elseStmt = nullptr;
-    if (peekNextToken().value == "else") {
-        expect(Keyword, "else");
-        expect(SEPERATOR, "(");
-        elseStmt = parseStatement();
-        expect(SEPERATOR, ")");
+    IfNode* ifNode = new IfNode();
+    ifNode->condition = *parseExpression();
+    ifNode->then = *parseStatement();
+    if (peekNextToken().type == Keyword && peekNextToken().value == "else") {
+        getNextToken(); // Consume 'else'
+        ifNode->Else = *parseStatement();
     }
-    return new IfNode(*condition, *thenStmt, *elseStmt);
+    return ifNode;
 }
 
-
 Token Parser::getNextToken() {
-    std::cout << "Getting next token\n";
     if (currentTokenIndex < tokens.size()) {
         return tokens[currentTokenIndex++];
     }
-    throw std::runtime_error("Unexpected end of input");
+    return Token{ END_OF_TOKEN, "" };
 }
 
-
-Token Parser::peekNextToken(int offset) {
-    std::cout << "Peeking next token with offset " << offset << "\n";
+Token Parser::peekNextToken(int offset) const {
     if (currentTokenIndex + offset < tokens.size()) {
         return tokens[currentTokenIndex + offset];
     }
-    throw std::runtime_error("Unexpected end of input");
+    return Token{ END_OF_TOKEN, "" };
 }
 
-
-void Parser::expect(TokenType expectedType, const std::string& expectedValue) {
-    std::cout << "Expecting token of type " << expectedType << " with value " << expectedValue << "\n";
+void Parser::expect(TokenType type, const std::string& value) {
     Token token = getNextToken();
-    if (token.type != expectedType || token.value != expectedValue) {
-        throw std::runtime_error("Expected token type: " + std::to_string(expectedType) + " with value: " + expectedValue + ", but got: " + token.value);
-    }
-}
-
-
-void Parser::expect(TokenType expectedType) {
-    std::cout << "Expecting token of type " << expectedType << "\n";
-    Token token = getNextToken();
-    if (token.type != expectedType) {
-        throw std::runtime_error("Expected token type: " + std::to_string(expectedType) + ", but got: " + std::to_string(token.type));
+    if (token.type != type || token.value != value) {
+        std::cerr << "Expected token type " << type << " with value " << value << ", but got type " << token.type << " with value " << token.value << "\n";
+        throw std::runtime_error("Unexpected token");
     }
 }

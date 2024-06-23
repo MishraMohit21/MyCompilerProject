@@ -30,5 +30,9 @@ private:
     // Token peekNextToken();
     void expect(TokenType expectedType);
     void expect(TokenType expectedType, const std::string& expectedValue);
-    Token peekNextToken(int offset = 1);
+    Token peekNextToken(int offset = 1) const;
 };
+
+
+bool is_number(const std::string& s);
+void typePrinter(ASTNode* node);
