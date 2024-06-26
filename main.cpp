@@ -35,12 +35,10 @@ int main(int argc, char* argv[]){
     std::vector<Token> Token_array = lexy.lexer_start(code);
     
     Parser parser(Token_array);
-    std::cout << "P1 complete\n";
     ASTNode* ast = parser.parse();
-    std::cout << "P2 complete\n";
     parser.printAST(ast);
-    std::cout << "P3 complete\n";
-
+    std::cout << "TEsting \n";
+    printAST_New(ast, 0);
 
     return 0;
 }

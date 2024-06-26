@@ -36,6 +36,8 @@ ASTNode* Parser::parseStatement() {
         return parseIf();
     } else if (token.type == Keyword && token.value == "func") {
         return parseFunction();
+    } else if (token.type == Keyword && token.value == "println") {
+        return parsePrintln();
     } else if (token.type == VARIABLE) {
         return parseAssignment();
     } else {
@@ -93,7 +95,7 @@ ASTNode* Parser::parseFactor() {
     } else if (token.type == LPAERN) {
         getNextToken();
         ASTNode* node = parseExpression();
-        if (peekNextToken().type != RPAREN) {
+        if (peekNextToken().type != SEPERATOR || peekNextToken().value != "(") {
             throw std::runtime_error("Expected closing parenthesis");
         }
         getNextToken();
@@ -128,14 +130,14 @@ ASTNode* Parser::parseFunction() {
         throw std::runtime_error("Expected function name");
     }
     getNextToken(); // Consume function name
-    if (peekNextToken().type != LPAERN) {
+    if (peekNextToken().type != SEPERATOR || peekNextToken().value != "(") {
         throw std::runtime_error("Expected '('");
     }
     getNextToken(); // Consume '('
-    while (peekNextToken().type != RPAREN) {
+    while (peekNextToken().type != SEPERATOR || peekNextToken().value != "(") {
         if (peekNextToken().type == VARIABLE) {
             funcNode->vars.push_back(getNextToken().value);
-            if (peekNextToken().type == COMM) {
+            if (peekNextToken().type == SEPERATOR || peekNextToken().value != ",") {
                 getNextToken(); // Consume ','
             }
         } else {
@@ -150,13 +152,14 @@ ASTNode* Parser::parseFunction() {
 ASTNode* Parser::parseCall() {
     CallNode* callNode = new CallNode();
     callNode->func = parsePrimary();
-    if (peekNextToken().type != LPAERN) {
+    if (peekNextToken().type != SEPERATOR || peekNextToken().value != "(") {
         throw std::runtime_error("Expected '('");
     }
     getNextToken(); // Consume '('
-    while (peekNextToken().type != RPAREN) {
+    while (peekNextToken().type != SEPERATOR || peekNextToken().value != "(") {
         callNode->args.push_back(parseExpression());
-        if (peekNextToken().type == COMM) {
+        if (peekNextToken().type == SEPERATOR || peekNextToken().value == ",") {
+
             getNextToken(); // Consume ','
         }
     }
@@ -174,6 +177,35 @@ ASTNode* Parser::parseAssignment() {
     assignNode->left = varNode;
     assignNode->right = parseExpression();
     return assignNode;
+}
+
+ASTNode* Parser::parsePrintln() {
+    Token printlnToken = getNextToken(); // Consume 'println'
+    std::cout << "Parsing println, got token: " << printlnToken.value << "\n";
+    
+    Token nextToken = peekNextToken();
+    std::cout << "Next token: " << nextToken.value << "\n";
+    
+    if (nextToken.type != SEPERATOR || nextToken.value != "(") {
+        throw std::runtime_error("Expected '('");
+    }
+    getNextToken(); // Consume '('
+    
+    CallNode* callNode = new CallNode();
+    VarNode* funcNode = new VarNode("println");
+    callNode->func = funcNode;
+    
+    callNode->args.push_back(parseExpression());
+    
+    nextToken = peekNextToken();
+    std::cout << "After expression, next token: " << nextToken.value << "\n";
+    
+    if (nextToken.type != SEPERATOR || nextToken.value != ")") {
+        throw std::runtime_error("Expected ')'");
+    }
+    getNextToken(); // Consume ')'
+    
+    return callNode;
 }
 
 ASTNode* Parser::parsePrimary() {
@@ -234,7 +266,7 @@ void Parser::printAST(ASTNode* node, int level) {
             std::cout << "Boolean: " << (static_cast<BoolNode*>(node)->value ? "true" : "false") << "\n";
             break;
         case If:
-            std::cout << "If Statement\n";
+            std::cout << "If\n";
             std::cout << "Condition:\n";
             printAST(static_cast<IfNode*>(node)->condition, level + 1);
             std::cout << "Then:\n";
@@ -246,4 +278,127 @@ void Parser::printAST(ASTNode* node, int level) {
             std::cout << "Unknown Node\n";
             break;
     }
+}
+
+void printAST_New(const ASTNode* node, int indent) {
+    if (!node) return;
+
+    auto indentStr = [](int indent) {
+        return std::string(indent * 2, ' ');
+    };
+
+    auto printNode = [&](const ASTNode* node, int indent) {
+        switch (node->type) {
+            case PROGRAM: {
+                const ProgramNode* progNode = static_cast<const ProgramNode*>(node);
+                std::cout << indentStr(indent) << "{\n";
+                std::cout << indentStr(indent + 1) << "type: \"prog\",\n";
+                std::cout << indentStr(indent + 1) << "prog: [\n";
+                for (const auto& child : progNode->prog) {
+                    printAST_New(child, indent + 2);
+                    std::cout << ",\n";
+                }
+                std::cout << indentStr(indent + 1) << "]\n";
+                std::cout << indentStr(indent) << "}";
+                break;
+            }
+            case ASSIGN: {
+                const AssignNode* assignNode = static_cast<const AssignNode*>(node);
+                std::cout << indentStr(indent) << "{\n";
+                std::cout << indentStr(indent + 1) << "type: \"assign\",\n";
+                std::cout << indentStr(indent + 1) << "operator: \"" << assignNode->operator_t << "\",\n";
+                std::cout << indentStr(indent + 1) << "left: ";
+                printAST_New(assignNode->left, indent + 2);
+                std::cout << ",\n";
+                std::cout << indentStr(indent + 1) << "right: ";
+                printAST_New(assignNode->right, indent + 2);
+                std::cout << "\n" << indentStr(indent) << "}";
+                break;
+            }
+            case CALL: {
+                const CallNode* callNode = static_cast<const CallNode*>(node);
+                std::cout << indentStr(indent) << "{\n";
+                std::cout << indentStr(indent + 1) << "type: \"call\",\n";
+                std::cout << indentStr(indent + 1) << "func: ";
+                printAST_New(callNode->func, indent + 2);
+                std::cout << ",\n";
+                std::cout << indentStr(indent + 1) << "args: [\n";
+                for (const auto& arg : callNode->args) {
+                    printAST_New(arg, indent + 2);
+                    std::cout << ",\n";
+                }
+                std::cout << indentStr(indent + 1) << "]\n";
+                std::cout << indentStr(indent) << "}";
+                break;
+            }
+            case FUNC: {
+                const FunctionNode* funcNode = static_cast<const FunctionNode*>(node);
+                std::cout << indentStr(indent) << "{\n";
+                std::cout << indentStr(indent + 1) << "type: \"lambda\",\n";
+                std::cout << indentStr(indent + 1) << "vars: [";
+                for (size_t i = 0; i < funcNode->vars.size(); ++i) {
+                    std::cout << "\"" << funcNode->vars[i] << "\"";
+                    if (i < funcNode->vars.size() - 1) std::cout << ", ";
+                }
+                std::cout << "],\n";
+                std::cout << indentStr(indent + 1) << "body: ";
+                printAST_New(funcNode->body, indent + 2);
+                std::cout << "\n" << indentStr(indent) << "}";
+                break;
+            }
+            case BINARY: {
+                const BinaryNode* binaryNode = static_cast<const BinaryNode*>(node);
+                std::cout << indentStr(indent) << "{\n";
+                std::cout << indentStr(indent + 1) << "type: \"binary\",\n";
+                std::cout << indentStr(indent + 1) << "operator: \"" << binaryNode->operator_t << "\",\n";
+                std::cout << indentStr(indent + 1) << "left: ";
+                printAST_New(binaryNode->left, indent + 2);
+                std::cout << ",\n";
+                std::cout << indentStr(indent + 1) << "right: ";
+                printAST_New(binaryNode->right, indent + 2);
+                std::cout << "\n" << indentStr(indent) << "}";
+                break;
+            }
+            case VAR: {
+                const VarNode* varNode = static_cast<const VarNode*>(node);
+                std::cout << "{ type: \"var\", value: \"" << varNode->value << "\" }";
+                break;
+            }
+            case NUM: {
+                const NumNode* numNode = static_cast<const NumNode*>(node);
+                std::cout << "{ type: \"num\", value: " << numNode->value << " }";
+                break;
+            }
+            case STR: {
+                const StringNode* strNode = static_cast<const StringNode*>(node);
+                std::cout << "{ type: \"string\", value: \"" << strNode->value << "\" }";
+                break;
+            }
+            case Bool: {
+                const BoolNode* boolNode = static_cast<const BoolNode*>(node);
+                std::cout << "{ type: \"bool\", value: " << (boolNode->value ? "true" : "false") << " }";
+                break;
+            }
+            case If: {
+                const IfNode* ifNode = static_cast<const IfNode*>(node);
+                std::cout << indentStr(indent) << "{\n";
+                std::cout << indentStr(indent + 1) << "type: \"if\",\n";
+                std::cout << indentStr(indent + 1) << "condition: ";
+                printAST_New(ifNode->condition, indent + 2);
+                std::cout << ",\n";
+                std::cout << indentStr(indent + 1) << "then: ";
+                printAST_New(ifNode->then, indent + 2);
+                std::cout << ",\n";
+                std::cout << indentStr(indent + 1) << "else: ";
+                printAST_New(ifNode->Else, indent + 2);
+                std::cout << "\n" << indentStr(indent) << "}";
+                break;
+            }
+            default:
+                std::cout << indentStr(indent) << "{ type: \"unknown\" }";
+                break;
+        }
+    };
+
+    printNode(node, indent);
 }

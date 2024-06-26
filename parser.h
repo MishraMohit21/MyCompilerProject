@@ -27,3 +27,5 @@ public:
     ASTNode* parse();
     void printAST(ASTNode* node, int level = 0);
 };
+
+void printAST_New(const ASTNode* node, int indent = 0);
