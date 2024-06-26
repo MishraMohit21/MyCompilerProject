@@ -1,38 +1,29 @@
 #pragma once
 
-#include "AST.h"
 #include "lexer.h"
+#include "ast.h"
+#include <vector>
 
 class Parser {
-public:
-    Parser(const std::vector<Token>& tokens);
-    ASTNode* parse();
-    void printAST(ASTNode* node, int indent = 0);
-
-private:
     std::vector<Token> tokens;
-    size_t currentTokenIndex;
+    int current_token_index;
+    Token getNextToken();
+    Token peekNextToken();
 
     ASTNode* parseProgram();
     ASTNode* parseStatement();
     ASTNode* parseExpression();
-    ASTNode* parseAssign();
-    ASTNode* parseCall();
-    ASTNode* parseFunction();
-    ASTNode* parseBinary();
-    ASTNode* parseVar();
-    ASTNode* parseNum();
-    ASTNode* parseBool();
-    ASTNode* parseString();
+    ASTNode* parseTerm();
+    ASTNode* parseFactor();
     ASTNode* parseIf();
+    ASTNode* parseFunction();
+    ASTNode* parseCall();
+    ASTNode* parseAssignment();
+    ASTNode* parsePrintln();
+    ASTNode* parsePrimary();
 
-    Token getNextToken();
-    // Token peekNextToken();
-    void expect(TokenType expectedType);
-    void expect(TokenType expectedType, const std::string& expectedValue);
-    Token peekNextToken(int offset = 1) const;
+public:
+    Parser(const std::vector<Token>& tokens);
+    ASTNode* parse();
+    void printAST(ASTNode* node, int level = 0);
 };
-
-
-bool is_number(const std::string& s);
-void typePrinter(ASTNode* node);

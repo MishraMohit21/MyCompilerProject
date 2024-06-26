@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <sstream>
 
 
 std::string GetCodeFromFile(std::ifstream& file){

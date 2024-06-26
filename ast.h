@@ -73,8 +73,8 @@ struct StringNode : public ASTNode
 
 struct IfNode : public ASTNode
 {
-    ASTNode condition , then, Else;
-    IfNode(ASTNode cond, ASTNode th, ASTNode El) : condition(cond), then (th), Else (El) {type = If;}
+    ASTNode* condition , *then, *Else;
+    IfNode(ASTNode* cond, ASTNode* th, ASTNode* El) : condition(cond), then (th), Else (El) {type = If;}
     IfNode() {type = If;}
 
 };
